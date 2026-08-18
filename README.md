@@ -2,6 +2,8 @@
 
 Read-only macOS command-line helper for quickly checking the USB-C connection signals that macOS exposes for the current device, port, and cable combination.
 
+The tool is published as a small, dependency-free macOS utility with deliberately narrow claims and safe defaults.
+
 ## What problem it solves
 
 USB-C cables often look identical while negotiating very different data speeds and power behavior. `usb-c-sanity` gives a Mac user a safe first-pass report from macOS’s own read-only device views before they blame the cable, port, hub, or device.
@@ -38,6 +40,8 @@ From this repository:
 zsh usb-c-sanity.zsh help
 zsh usb-c-sanity.zsh --version
 zsh usb-c-sanity.zsh scan
+zsh usb-c-sanity.zsh scan --no-ioreg
+zsh usb-c-sanity.zsh scan --share-safe
 zsh usb-c-sanity.zsh raw-safe
 ```
 
@@ -48,6 +52,10 @@ Recommended practical flow:
 3. Repeat with a known-good cable and the same device/port.
 4. Compare only observed fields such as `Speed`, `Current Available`, and `Current Required`.
 5. Treat differences as clues, not proof.
+
+For a narrower report before sharing output, use `scan --no-ioreg`. It skips the IORegistry device-tree section and keeps only the summarized, redacted `system_profiler` view.
+
+For the narrowest copy/paste report, use `scan --share-safe`. It skips IORegistry and suppresses device names, manufacturer names, and vendor/product IDs, retaining only observed speed/current lines. This can reduce accidental disclosure, but users should still review output before sharing it.
 
 ## How to read the report
 
@@ -73,15 +81,14 @@ Recommended practical flow:
 - `SAFETY_POLICY.md` — safety and privacy boundaries.
 - `RESPONSIBLE_USE.md` — responsible interpretation notes.
 - `SECURITY.md` — security reporting and non-goals.
-- `LICENSE` — MIT license placeholder for public packaging.
+- `tests/test_usb_c_sanity.sh` — smoke coverage for the public CLI.
+- `LICENSE` — MIT license.
 
 ## Verification
 
 ```sh
-zsh -n usb-c-sanity.zsh
-zsh usb-c-sanity.zsh --version
-zsh usb-c-sanity.zsh help
-zsh usb-c-sanity.zsh scan
+make test
+make verify-release
 ```
 
 Before sharing reports publicly, review output for private device names or identifiers.

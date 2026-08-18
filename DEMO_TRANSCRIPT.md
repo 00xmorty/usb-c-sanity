@@ -1,12 +1,12 @@
 # Demo Transcript
 
-Smoke transcript captured for the public release. This transcript intentionally avoids publishing a full machine report.
+Local smoke transcript captured for the public-ready artifact. This transcript intentionally avoids publishing a full machine report.
 
 ```sh
-$ zsh usb-c-sanity.zsh --version
+$ zsh products/usb-c-cable-sanity-cli/usb-c-sanity.zsh --version
 usb-c-sanity 0.1.0-local
 
-$ zsh usb-c-sanity.zsh help
+$ zsh products/usb-c-cable-sanity-cli/usb-c-sanity.zsh help
 usb-c-sanity — read-only macOS USB-C negotiated-signal helper
 ...
 

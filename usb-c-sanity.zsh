@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 set -u
 
-VERSION="0.1.0"
+VERSION="0.1.2"
 PROGRAM="usb-c-sanity"
 
 usage() {
@@ -12,6 +12,8 @@ Usage:
   zsh usb-c-sanity.zsh help
   zsh usb-c-sanity.zsh --version
   zsh usb-c-sanity.zsh scan
+  zsh usb-c-sanity.zsh scan --no-ioreg
+  zsh usb-c-sanity.zsh scan --share-safe
   zsh usb-c-sanity.zsh raw-safe
 
 What it reports:
@@ -29,6 +31,12 @@ Safety:
 Important limitation:
   This tool observes the current Mac + port + device + cable negotiation.
   It does NOT certify or guarantee cable capacity.
+
+Privacy mode:
+  scan --no-ioreg skips the IORegistry device-tree section and reports only
+  the summarized, redacted system_profiler view.
+  scan --share-safe also suppresses device names, manufacturer names, and
+  vendor/product IDs, leaving only observed speed/current signal lines.
 EOF
 }
 
@@ -66,7 +74,21 @@ print_header() {
 }
 
 scan_system_profiler() {
+  local share_safe="${1:-0}"
   require_cmd system_profiler || return 1
+  if (( share_safe )); then
+    print -- "## system_profiler SPUSBDataType share-safe signals"
+    print -- "privacy_mode: device names and identifiers suppressed (--share-safe)"
+    system_profiler SPUSBDataType 2>/dev/null | awk '
+      /Speed:/ { gsub(/^[[:space:]]+/, "", $0); print "signal: " $0 }
+      /Current Available \(mA\):/ { gsub(/^[[:space:]]+/, "", $0); print "signal: " $0 }
+      /Current Required \(mA\):/ { gsub(/^[[:space:]]+/, "", $0); print "signal: " $0 }
+      /Extra Operating Current \(mA\):/ { gsub(/^[[:space:]]+/, "", $0); print "signal: " $0 }
+      /Sleep current \(mA\):/ { gsub(/^[[:space:]]+/, "", $0); print "signal: " $0 }
+    '
+    print -- ""
+    return 0
+  fi
   print -- "## system_profiler SPUSBDataType summary"
   system_profiler SPUSBDataType 2>/dev/null | awk '
     /^[[:space:]]{4,}[^ ].*:$/ { item=$0; gsub(/^[[:space:]]+/, "", item); gsub(/:$/, "", item); print "device: " item }
@@ -101,9 +123,25 @@ raw_safe() {
 }
 
 scan() {
+  local include_ioreg=1
+  local share_safe=0
+  case "${1:-}" in
+    "") ;;
+    --no-ioreg) include_ioreg=0 ;;
+    --share-safe) include_ioreg=0; share_safe=1 ;;
+    *) print -- "unknown scan option: $1" >&2; return 2 ;;
+  esac
   print_header
-  scan_system_profiler
-  scan_ioreg
+  scan_system_profiler "$share_safe"
+  if (( include_ioreg )); then
+    scan_ioreg
+  elif (( share_safe )); then
+    print -- "privacy_mode: ioreg section skipped (--share-safe)"
+    print -- ""
+  else
+    print -- "privacy_mode: ioreg section skipped (--no-ioreg)"
+    print -- ""
+  fi
   print -- "## interpretation"
   print -- "- If Speed is shown, treat it as the observed negotiated USB data speed for the current connection."
   print -- "- If current fields are shown, treat them as observed USB current/power hints for the current device/port state."
@@ -114,7 +152,7 @@ scan() {
 case "${1:-help}" in
   help|-h|--help) usage ;;
   --version|version) version ;;
-  scan) scan ;;
+  scan) scan "${2:-}" ;;
   raw-safe) raw_safe ;;
   *) print -- "unknown command: $1" >&2; usage >&2; exit 2 ;;
 esac

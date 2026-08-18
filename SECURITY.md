@@ -2,7 +2,7 @@
 
 ## Supported status
 
-This repository is an early public release. Security fixes are handled on the default branch and release tags.
+Security fixes are provided for the latest published release on the default branch.
 
 ## Security model
 
@@ -14,4 +14,4 @@ USB serial numbers, USB address/location-like fields, and similar identifiers sh
 
 ## Reporting issues
 
-Please report security or privacy issues via GitHub Issues on this repository, or contact NeuraByte Labs through the public profile. Do not publish private machine reports or unredacted device identifiers.
+For suspected vulnerabilities, use GitHub's private vulnerability reporting or open a minimal issue without private machine output. Do not publish unredacted device identifiers, serials, or private machine reports.
